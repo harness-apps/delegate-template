@@ -78,7 +78,7 @@ spec:
             port: 3460
             scheme: HTTP
           initialDelaySeconds: 10
-          periodSeconds: 100
+          periodSeconds: 10
           failureThreshold: 2
         startupProbe:
           httpGet:
