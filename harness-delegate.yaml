@@ -1,18 +1,18 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: <DELEGATE_NAMESPACE>
+  name: delegate_ns
 
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: <DELEGATE_NAMESPACE>-cluster-admin
+  name: delegate_ns-cluster-admin
 subjects:
   - kind: ServiceAccount
     name: default
-    namespace: <DELEGATE_NAMESPACE>
+    namespace: delegate_ns
 roleRef:
   kind: ClusterRole
   name: cluster-admin
@@ -23,11 +23,11 @@ roleRef:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: <DELEGATE_NAME>-account-token
-  namespace: <DELEGATE_NAMESPACE>
+  name: delegate_name-account-token
+  namespace: delegate_ns
 type: Opaque
 data:
-  DELEGATE_TOKEN: "<DELEGATE_TOKEN>"
+  DELEGATE_TOKEN: "delegate_token"
 
 ---
 
@@ -38,18 +38,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    harness.io/name: <DELEGATE_NAME>
-  name: <DELEGATE_NAME>
-  namespace: <DELEGATE_NAMESPACE>
+    harness.io/name: delegate_name
+  name: delegate_name
+  namespace: delegate_ns
 spec:
-  replicas: <DELEGATE_REPLICA>
+  replicas: delegate_replica
   selector:
     matchLabels:
-      harness.io/name: <DELEGATE_NAME>
+      harness.io/name: delegate_name
   template:
     metadata:
       labels:
-        harness.io/name: <DELEGATE_NAME>
+        harness.io/name: delegate_name
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "3460"
@@ -58,7 +58,7 @@ spec:
       terminationGracePeriodSeconds: 600
       restartPolicy: Always
       containers:
-      - image: harness/delegate-immutable:<DELEGATE_IMAGE>
+      - image: harness/delegate-immutable:delegate_image
         imagePullPolicy: Always
         name: delegate
         securityContext:
@@ -68,10 +68,10 @@ spec:
           - containerPort: 8080
         resources:
           limits:
-            memory: "<DELEGATE_MEMORY>"
+            memory: "delegate_memory"
           requests:
-            cpu: "<DELEGATE_CPU>"
-            memory: "<DELEGATE_MEMORY>"
+            cpu: "delegate_cpu"
+            memory: "delegate_memory"
         livenessProbe:
           httpGet:
             path: /api/health
@@ -90,18 +90,18 @@ spec:
           failureThreshold: 15
         envFrom:
         - secretRef:
-            name: <DELEGATE_NAME>-account-token
+            name: delegate_name-account-token
         env:
         - name: JAVA_OPTS
           value: "-Xms64M"
         - name: ACCOUNT_ID
-          value: <DELAGATE_ACCOUNT_ID>
+          value: delegate_accountId
         - name: MANAGER_HOST_AND_PORT
-          value: <DELEGATE_MANAGER_HOST>
+          value: delegate_manager_host
         - name: DEPLOY_MODE
           value: KUBERNETES
         - name: DELEGATE_NAME
-          value: <DELEGATE_NAME>
+          value: delegate_name
         - name: DELEGATE_TYPE
           value: "KUBERNETES"
         - name: DELEGATE_NAMESPACE
@@ -109,11 +109,11 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         - name: INIT_SCRIPT
-          value: "<DELEGATE_INIT_SCRIPT>"
+          value: "delegate_init_script"
         - name: DELEGATE_DESCRIPTION
           value: ""
         - name: DELEGATE_TAGS
-          value: "<DELEGATE_TAGS>"
+          value: "delegate_tags"
         - name: NEXT_GEN
           value: "true"
         - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
@@ -127,11 +127,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: delegate-service
-  namespace: <DELEGATE_NAMESPACE>
+  namespace: delegate_ns
 spec:
   type: ClusterIP
   selector:
-    harness.io/name: <DELEGATE_NAME>
+    harness.io/name: delegate_name
   ports:
     - port: 8080
 
@@ -141,7 +141,7 @@ kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: upgrader-cronjob
-  namespace: <DELEGATE_NAMESPACE>
+  namespace: delegate_ns
 rules:
   - apiGroups: ["batch", "apps", "extensions"]
     resources: ["cronjobs"]
@@ -155,12 +155,12 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: <DELEGATE_NAME>-upgrader-cronjob
-  namespace: <DELEGATE_NAMESPACE>
+  name: delegate_name-upgrader-cronjob
+  namespace: delegate_ns
 subjects:
   - kind: ServiceAccount
     name: upgrader-cronjob-sa
-    namespace: <DELEGATE_NAMESPACE>
+    namespace: delegate_ns
 roleRef:
   kind: Role
   name: upgrader-cronjob
@@ -172,46 +172,45 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: upgrader-cronjob-sa
-  namespace: <DELEGATE_NAMESPACE>
+  namespace: delegate_ns
 
 ---
 
 apiVersion: v1
 kind: Secret
 metadata:
-  name: <DELEGATE_NAME>-upgrader-token
-  namespace: <DELEGATE_NAMESPACE>
+  name: delegate_name-upgrader-token
+  namespace: delegate_ns
 type: Opaque
 data:
-  UPGRADER_TOKEN: "<DELEGATE_TOKEN>"
+  UPGRADER_TOKEN: "delegate_token"
 
 ---
 
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: <DELEGATE_NAME>-upgrader-config
-  namespace: <DELEGATE_NAMESPACE>
+  name: delegate_name-upgrader-config
+  namespace: delegate_ns
 data:
   config.yaml: |
     mode: Delegate
     dryRun: false
-    workloadName: <DELEGATE_NAME>
-    namespace: <DELEGATE_NAMESPACE>
+    workloadName: delegate_name
+    namespace: delegate_ns
     containerName: delegate
     delegateConfig:
-      accountId: <DELAGATE_ACCOUNT_ID>
+      accountId: delegate_accountId
       managerHost: delegate_manager_host
-
 ---
 
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   labels:
-    harness.io/name: <DELEGATE_NAME>-upgrader-job
-  name: <DELEGATE_NAME>-upgrader-job
-  namespace: <DELEGATE_NAMESPACE>
+    harness.io/name: delegate_name-upgrader-job
+  name: delegate_name-upgrader-job
+  namespace: delegate_ns
 spec:
   schedule: "0 */1 * * *"
   concurrencyPolicy: Forbid
@@ -228,11 +227,11 @@ spec:
             imagePullPolicy: Always
             envFrom:
             - secretRef:
-                name: <DELEGATE_NAME>-upgrader-token
+                name: delegate_name-upgrader-token
             volumeMounts:
               - name: config-volume
                 mountPath: /etc/config
           volumes:
             - name: config-volume
               configMap:
-                name: <DELEGATE_NAME>-upgrader-config
+                name: delegate_name-upgrader-config
