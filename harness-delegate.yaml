@@ -79,7 +79,7 @@ spec:
             scheme: HTTP
           initialDelaySeconds: 10
           periodSeconds: 10
-          failureThreshold: 2
+          failureThreshold: 20
         startupProbe:
           httpGet:
             path: /api/health
