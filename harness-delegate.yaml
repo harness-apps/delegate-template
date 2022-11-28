@@ -58,7 +58,7 @@ spec:
       terminationGracePeriodSeconds: 600
       restartPolicy: Always
       containers:
-      - image: harness/delegate-immutable:delegate_image
+      - image: delegate_image
         imagePullPolicy: Always
         name: delegate
         securityContext:
